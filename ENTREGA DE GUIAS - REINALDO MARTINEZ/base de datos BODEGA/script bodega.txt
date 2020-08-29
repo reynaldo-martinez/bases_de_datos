@@ -1,0 +1,243 @@
+--creacion de usuarios 
+
+create user supervisorp with password 'supervisor'; 
+
+create user despachop with password 'despacho'; 
+
+create user vendedorsucursalp with password 'vendedor'; 
+
+  
+
+--permisos 
+
+alter user supervisorp superuser; 
+
+grant all privileges on database bodega to supervisorp; 
+
+grant select, insert, update, delete on  articulo to despachop; 
+
+grant select, insert, update, delete on  compra to vendedorsucursalp; 
+
+revoke select, insert, update, delete on articulo from vendedorsucursalp; 
+
+revoke insert, delete, update on  noentregado, entregado from vendedorsucursalp, despachop; 
+
+  
+
+ --creacion de tablas 
+
+create table articulo( 
+
+      id_articulo serial primary key, 
+
+    nombre varchar(20) not null, 
+
+    precio decimal check(precio > 0), 
+
+    stock int not null, 
+
+    id_categoria int check(id_categoria > 0) 
+
+  
+
+); 
+
+  
+
+create table categoria( 
+
+    id_categoria serial primary key, 
+
+    categoria varchar(20) not null 
+
+     
+
+); 
+
+  
+
+create table compra( 
+
+    id_compra serial primary key, 
+
+    id_articulo int check(id_articulo > 0), 
+
+    cantidad int not null, 
+
+    monto decimal check (monto > 0), 
+
+    id_cliente int check(id_cliente > 0) 
+
+     
+
+); 
+
+  
+
+create table cliente( 
+
+    id_cliente serial primary key, 
+
+    nombre varchar(30) not null, 
+
+    telefono varchar(20) not null 
+
+); 
+
+  
+
+create table entregado( 
+
+    id_entregrado serial primary key, 
+
+    id_compra int check(id_compra > 0) 
+
+); 
+
+  
+
+create table noentregado( 
+
+    id_noentregrado serial primary key, 
+
+    id_compra int check(id_compra > 0) 
+
+); 
+
+ 
+
+--relacion de articulo a categoria 
+
+alter table articulo add constraint fk_articulo_categoria 
+
+foreign key (id_categoria) references categoria(id_categoria) 
+
+  
+
+--relacion de compra a articulo 
+
+alter table compra add constraint fk_compra_articulo 
+
+foreign key (id_articulo) references articulo(id_articulo) 
+
+  
+
+--relacion de compra a cliente 
+
+alter table compra add constraint fk_compra_cliente 
+
+foreign key (id_cliente) references cliente(id_cliente) 
+
+  
+
+--relacion de articulo a categoria 
+
+alter table articulo add constraint fk_articulo_categoria 
+
+foreign key (id_categoria) references categoria(id_categoria) 
+
+  
+
+--relacion de entregado a compra 
+
+alter table entregado add constraint fk_entregado_compra 
+
+foreign key (id_compra) references compra(id_compra) 
+
+  
+
+--relacion de noentregado a compra 
+
+alter table noentregado add constraint fk_noentregado_compra 
+
+foreign key (id_compra) references compra(id_compra) 
+
+ 
+
+--insercion en categoria 
+
+insert into categoria values(1, 'hogar'); 
+
+insert into categoria values(2, 'ropa'); 
+
+insert into categoria values(3, 'electrodomesticos'); 
+
+insert into categoria values(4, 'informatica'); 
+
+insert into categoria values(5, 'utilidades'); 
+
+select * from categoria; 
+
+  
+
+--insercion en articulo 
+
+insert into articulo values(1,'Ropero', 225.66, 150, 1); 
+
+insert into articulo values(2, 'smart tv', 500.99, 36, 3); 
+
+insert into articulo values(3, 'cocina', 200, 10, 3); 
+
+insert into articulo values(4, 'jeans', 25.99, 200, 2); 
+
+insert into articulo values(5, 'smartphone', 225, 15, 4); 
+
+insert into articulo values(6, 'candado', 10, 150, 5); 
+
+insert into articulo values(7, 'mesa',150, 15, 5); 
+
+select * from articulo join categoria on articulo.id_categoria = categoria.id_categoria; 
+
+  
+
+--insercion en cliente 
+
+insert into cliente values (1, 'Jose Mariano', '78542236'); 
+
+insert into cliente values (2, 'Fernando Gutierrez', '74145521'); 
+
+insert into cliente values (3, 'Mario Mendez', '79632589'); 
+
+insert into cliente values (4, 'Maria Fernandez', '74142566'); 
+
+insert into cliente values (5, 'Jose Moran', '71452255'); 
+
+select * from cliente; 
+
+  
+
+  
+
+--insercion en compra (el siguiente codigo puede ser recursivo y usarse cada vez que se va a hacer una insercion en la tabla compra, de esa manera se podrá calcular el monto) 
+
+do $$ 
+
+declare monto decimal; 
+
+begin 
+
+select articulo.precio into monto from articulo where articulo.id_articulo=5; 
+
+insert into compra values (2, 3, 2, monto * 2, 2); 
+
+end $$; 
+
+select * from compra join articulo on compra.id_articulo = articulo.id_articulo; 
+
+  
+
+  
+
+--insercion en entregado 
+
+insert into entregado values(1, 1); 
+
+select * from entregado join compra on entregado.id_compra = compra.id_compra; 
+
+  
+
+--insercion en noentregado 
+
+insert into noentregado values(2, 2); 
+
+select * from noentregado join compra on noentregado.id_compra = compra.id_compra; 
